@@ -451,8 +451,8 @@ class World {
 
         const dummy = new THREE.Object3D();
 
-        const renderBlocks = this.getVisibleBlocks(blocks);
-        const blocksByName = Object.groupBy(this.hideInnerBlocks ? renderBlocks : blocks, block => block.name);
+        const blocksByName = Object.groupBy(blocks, block => block.name);
+        console.log(blocksByName);
 
         for (const [name, typedBlocks] of Object.entries(blocksByName)) {
             if (!typedBlocks?.length) continue;

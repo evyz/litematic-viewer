@@ -7,7 +7,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { decodeBlockStates } from "../utils/decodeBlocks";
 import RegionScene from "./RegionScene";
 import { generateUUID } from "three/src/math/MathUtils.js";
-import { Block } from "../shared/types/block";
+import { BlockMeta } from "../shared/types/block";
+import RegionScene2 from "./RegionScene2";
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -138,7 +139,7 @@ const getMaterial = async (name: string) => {
     return material;
 };
 
-async function renderBlocks(container: HTMLDivElement, blocks: Block[]) {
+async function renderBlocks(container: HTMLDivElement, blocks: BlockMeta[]) {
     const width = container.clientWidth;
     const height = container.clientHeight;
 
@@ -256,7 +257,7 @@ async function renderBlocks(container: HTMLDivElement, blocks: Block[]) {
 
 export default function RegionClient({ slug }: { slug: string }) {
     const viewerRef = useRef<HTMLDivElement | null>(null);
-    const [blocks, setBlocks] = useState<Block[]>([])
+    const [blocks, setBlocks] = useState<BlockMeta[]>([])
     const [usedBlocks, setUsedBlocks] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -287,7 +288,7 @@ export default function RegionClient({ slug }: { slug: string }) {
 
             const indices = decodeBlockStates(blockStates, bitsPerBlock, totalBlocks);
 
-            const blocks: Block[] = [];
+            const blocks: BlockMeta[] = [];
 
             let index = 0;
 
@@ -314,7 +315,10 @@ export default function RegionClient({ slug }: { slug: string }) {
                                 name,
                                 id: generateUUID(),
 
-                                type: properties ? "stairs" : 'block',
+                                type: name.includes('_stairs') ? "stairs"
+                                    : name.includes('_trapdoor') ? "trapdoor"
+                                        : name.includes("lantern") ? 'lantern' :
+                                            'block',
 
                                 state: properties
                                     ? {
@@ -322,6 +326,10 @@ export default function RegionClient({ slug }: { slug: string }) {
                                         half: properties.half?.value,
                                         shape: properties.shape?.value,
                                         waterlogged: properties.waterlogged?.value === 'true',
+                                        axis: properties?.axis?.value,
+                                        open: properties?.open?.value === "true",
+                                        powered: properties?.powered?.value === "true",
+                                        hanging: properties?.hanging?.value === "true",
                                     }
                                     : undefined,
                             });
@@ -346,6 +354,10 @@ export default function RegionClient({ slug }: { slug: string }) {
             cleanup?.();
         };
     }, [slug]);
+
+    return (
+        <RegionScene2 blocks={blocks} />
+    )
 
     return (
         <RegionScene blocks={blocks} usedBlocks={usedBlocks} />

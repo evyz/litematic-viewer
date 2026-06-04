@@ -16,7 +16,7 @@ export type Block = {
     name: string;
     id: string;
 
-    type: 'block' | 'stairs',
+    type: 'block' | 'stairs' | 'trapdoor' | "lantern",
 
     state?: {
         facing?: BlockDirection;
@@ -26,5 +26,13 @@ export type Block = {
         shape?: StairShape;
 
         waterlogged?: boolean;
+
+        open?: boolean;
+        powered?: boolean;
+        hanging?: boolean;
+
+        axis?: "x" | "y" | "z"
     };
 };
+
+export type BlockMeta = Block
