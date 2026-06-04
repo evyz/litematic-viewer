@@ -308,6 +308,10 @@ export default function RegionClient({ slug }: { slug: string }) {
 
                             const properties = block.Properties?.value;
 
+                            if (name.includes('slab')) {
+                                console.log(block);
+                            }
+
                             blocks.push({
                                 x,
                                 y,
@@ -318,7 +322,8 @@ export default function RegionClient({ slug }: { slug: string }) {
                                 type: name.includes('_stairs') ? "stairs"
                                     : name.includes('_trapdoor') ? "trapdoor"
                                         : name.includes("lantern") ? 'lantern' :
-                                            'block',
+                                            name.includes("slab") ? 'slab' :
+                                                'block',
 
                                 state: properties
                                     ? {
@@ -330,6 +335,7 @@ export default function RegionClient({ slug }: { slug: string }) {
                                         open: properties?.open?.value === "true",
                                         powered: properties?.powered?.value === "true",
                                         hanging: properties?.hanging?.value === "true",
+                                        type: properties?.type?.value
                                     }
                                     : undefined,
                             });

@@ -10,7 +10,8 @@ export class Stairs extends Entity {
         const step = new THREE.BoxGeometry(1, 0.5, 0.5);
         step.translate(0, 0.25, 0.25);
 
-        return mergeGeometries([bottom, step]);
+        this.geometry = mergeGeometries([bottom, step]);
+        return this.geometry;
     }
 
     private getStairsRotationY() {
@@ -47,7 +48,7 @@ export class Stairs extends Entity {
         name = name.replace('_stairs', "");
 
         const wordWithoutS = new Set(['brick', 'stone_brick', 'mossy_stone_brick'])
-        const planks = new Set(['spruce'])
+        const planks = new Set(['spruce', 'birch', 'oak'])
 
         if (wordWithoutS.has(name)) {
             return name + 's'

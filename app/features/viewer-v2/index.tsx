@@ -30,7 +30,8 @@ function WorldBridge({ world, blocks }: WorldProps) {
     }, [world, gl, scene, camera])
 
     useEffect(() => {
-        world.setBlocks(blocks);
+        const record = blocks.reduce((prev, block) => ({ ...prev, [`${block.x}-${block.y}-${block.z}`]: block }), {})
+        world.setBlocks(record);
     }, [blocks, world])
 
     useFrame((_, delta) => {

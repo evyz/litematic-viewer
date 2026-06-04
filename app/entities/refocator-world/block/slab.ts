@@ -1,35 +1,29 @@
 import * as THREE from 'three';
 import { Entity } from "./entity";
 
-export class Block extends Entity {
+export class Slab extends Entity {
+
+    private height = 0.5
+
     createGeometry() {
-        const geo = new THREE.BoxGeometry(1, 1, 1);
+        const geo = new THREE.BoxGeometry(1, this.height, 1);
         this.geometry = geo;
         return geo
     }
 
     applyTransform(object: THREE.Object3D) {
-        object.position.set(this.data.x, this.data.y, this.data.z);
+        const diff = (this.height / 2)
+        object.position.set(this.data.x, this.data.y - (this.data?.state?.type === 'top' ? -diff : diff), this.data.z);
         object.rotation.set(0, 0, 0);
         object.scale.set(1, 1, 1);
     }
 
-    private prepareName(name: string): string | string[] {
-        name = name.replace('minecraft:', '')
-        name = name.replace('_wood', "_log");
-        name = name.replace('_stairs', "");
+    private prepareName(): string | string[] {
+        let name = this.name.replace('minecraft:', '')
+        name = name.replace('_slab', "");
 
-        if (name.includes("_log")) {
-            const side = [name, name]
-            const topPath = name + '_top'
-            const top = [topPath, topPath]
-            if (this.data.state?.axis === "x") {
-                return [...side, ...side, ...top]
-            }
-            if (this.data.state?.axis === "z") {
-                return [...top, ...side, ...side]
-            }
-            return [...side, ...top, ...side]
+        if (name.includes('_brick')) {
+            name += "s"
         }
 
         return name
@@ -38,8 +32,8 @@ export class Block extends Entity {
 
 
     applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
-
-        const name = this.prepareName(this.name)
+        const name = this.prepareName()
+        console.log(name);
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {

@@ -5,7 +5,8 @@ export class TrapDoor extends Entity {
     private readonly thickness = 0.1875;
 
     createGeometry() {
-        return new THREE.BoxGeometry(1, this.thickness, 1);
+        this.geometry = new THREE.BoxGeometry(1, this.thickness, 1);
+        return this.geometry;
     }
 
     applyTransform(object: THREE.Object3D) {

@@ -3,6 +3,8 @@ import { InputState } from '../world/input.state';
 import { Block, Stairs, TrapDoor, Lantern } from './block';
 import { BlockMeta } from '@/app/shared/types/block';
 import { Material } from './material';
+import { BoxSide } from './block/entity';
+import { Slab } from './block/slab';
 
 type WorldContext = {
     scene: THREE.Scene;
@@ -27,7 +29,7 @@ export default class World {
     private light: THREE.DirectionalLight | null = null
     private ambientLight: THREE.AmbientLight | null = null
 
-    blocks: Map<string, Block | Stairs | TrapDoor | Lantern> = new Map()
+    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab> = new Map()
     private material = new Material();
     private textureLoader = new THREE.TextureLoader();
 
@@ -89,23 +91,27 @@ export default class World {
 
     private spawnBlock(meta: BlockMeta) {
         if (meta.type === 'block') {
-            return new Block(meta);
+            return new Block(meta, this.textureLoader);
         }
 
         if (meta.type === "trapdoor") {
-            return new TrapDoor(meta);
+            return new TrapDoor(meta, this.textureLoader);
         }
 
         if (meta.type === "lantern") {
-            return new Lantern(meta);
+            return new Lantern(meta, this.textureLoader);
+        }
+        if (meta.type === 'slab') {
+            return new Slab(meta, this.textureLoader);
         }
 
-        return new Stairs(meta)
+        return new Stairs(meta, this.textureLoader)
     }
 
-    setBlocks(metaBlocks: BlockMeta[]) {
+    setBlocks(metaBlocks: Record<string, BlockMeta>) {
 
-        for (const meta of metaBlocks) {
+        for (const key of Object.keys(metaBlocks)) {
+            const meta = metaBlocks[key];
             const block = this.spawnBlock(meta)
             const geometry = block.createGeometry()
             const material = block.applyMaterial(this.textureLoader);
@@ -119,6 +125,38 @@ export default class World {
 
             mesh.updateMatrix();
             block.setMesh(mesh);
+
+            const [x, y, z] = key.split('-').map(Number)
+            const getKey = (x: number, y: number, z: number) => `${x}-${y}-${z}`
+            const top = metaBlocks[getKey(x, y + 1, z)]
+            const bottom = metaBlocks[getKey(x, y - 1, z)]
+            const left = metaBlocks[getKey(x - 1, y, z)]
+            const right = metaBlocks[getKey(x + 1, y, z)]
+            const front = metaBlocks[getKey(x, y, z + 1)]
+            const back = metaBlocks[getKey(x, y, z - 1)]
+
+
+            const sides: BoxSide[] = []
+            if (top && top.type === 'block') {
+                sides.push('top')
+            }
+            if (bottom && bottom.type === 'block') {
+                sides.push('bottom')
+            }
+            if (left && left.type === 'block') {
+                sides.push('left')
+            }
+            if (right && right.type === 'block') {
+                sides.push('right')
+            }
+            if (front && front.type === 'block') {
+                sides.push('front')
+            }
+            if (back && back.type === 'block') {
+                sides.push('back')
+            }
+
+            block.hideBoxSides(sides);
 
             this.blocks.set(block.getRenderKey(), block);
             this.scene?.add(mesh);

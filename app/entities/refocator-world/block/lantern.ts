@@ -1,9 +1,16 @@
 import * as THREE from 'three';
 import { Entity } from "./entity";
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export class Lantern extends Entity {
+
+
+    private lanternHeight = 0.4375
+    private lanternSideWidth = 0.3125
+
     createGeometry() {
-        return new THREE.BoxGeometry(0.3125, 0.4375, 0.3125);
+        this.geometry = new THREE.BoxGeometry(this.lanternSideWidth, this.lanternHeight, this.lanternSideWidth);
+        return this.geometry;
     }
 
     applyTransform(object: THREE.Object3D) {
@@ -12,22 +19,48 @@ export class Lantern extends Entity {
         object.scale.set(1, 1, 1);
 
         if (this.data.state?.hanging) {
-            const chain = new THREE.Mesh(
-                new THREE.BoxGeometry(0.1, 0.5, 0.1),
-                new THREE.MeshStandardMaterial({
-                    color: "#ffffff",
-                })
-            );
-
-            chain.position.y = 0.5;
+            const chain = this.createChainMesh();
 
             object.add(chain);
         }
     }
 
+    private createChainMesh() {
 
-    private prepareName(name: string): string | string[] {
-        name = name.replace('minecraft:', '')
+        const name = this.prepareChainName();
+        const texture = this.textureLoader.load(`/block/${name}.png`);
+
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.NearestFilter;
+        texture.generateMipmaps = false;
+
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+            alphaTest: 0.1,
+            side: THREE.DoubleSide,
+        });
+
+        const width = this.lanternSideWidth / 2;
+        const height = this.lanternHeight;
+
+        const geo1 = new THREE.PlaneGeometry(width, height);
+        const geo2 = new THREE.PlaneGeometry(width, height);
+
+        geo1.rotateY(Math.PI / 4);
+        geo2.rotateY(-Math.PI / 4);
+
+        geo1.translate(0, height, 0);
+        geo2.translate(0, height, 0);
+
+        const geometry = mergeGeometries([geo1, geo2]);
+
+        return new THREE.Mesh(geometry, material);
+    }
+
+    private prepareName(): string | string[] {
+        const name = this.name.replace('minecraft:', '')
 
         if (name === 'lantern') {
             const side = name + '_main'
@@ -38,8 +71,12 @@ export class Lantern extends Entity {
         return name
     }
 
+    private prepareChainName() {
+        return "lantern_main_chain"
+    }
+
     applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
-        const name = this.prepareName(this.name)
+        const name = this.prepareName()
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {

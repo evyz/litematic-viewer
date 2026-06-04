@@ -16,7 +16,7 @@ export type Block = {
     name: string;
     id: string;
 
-    type: 'block' | 'stairs' | 'trapdoor' | "lantern",
+    type: 'block' | 'stairs' | 'trapdoor' | "lantern" | "slab",
 
     state?: {
         facing?: BlockDirection;
@@ -32,6 +32,7 @@ export type Block = {
         hanging?: boolean;
 
         axis?: "x" | "y" | "z"
+        type?: 'top' | 'bottom'
     };
 };
 
