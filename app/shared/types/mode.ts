@@ -1,0 +1,1 @@
+export type Mode = 'default' | 'remove_block' | "select_region" | "add_block" | null
