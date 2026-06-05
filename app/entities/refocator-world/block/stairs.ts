@@ -61,10 +61,10 @@ export class Stairs extends Entity {
         return name
     }
 
-    applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial {
+    applyMaterial(): THREE.MeshStandardMaterial {
         const name = this.prepareTexture(this.name);
 
-        const texture = textureLoader.load(`/block/${name}.png`, () => { }, () => { }, () => {
+        const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, () => {
             console.log(name);
         });
 

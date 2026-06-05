@@ -7,6 +7,7 @@ export abstract class Entity {
 
     mesh?: THREE.Mesh;
     geometry?: THREE.BufferGeometry;
+    hiddenSides: BoxSide[] = [];
 
     constructor(public data: BlockMeta, readonly textureLoader: THREE.TextureLoader) {
 
@@ -53,7 +54,7 @@ export abstract class Entity {
         object.position.set(this.data.x, this.data.y, this.data.z);
     }
 
-    abstract applyMaterial(texture: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
+    abstract applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
 
     isSolid() {
         return true;
@@ -63,13 +64,6 @@ export abstract class Entity {
     hideBoxSides(
         sidesToHide: BoxSide[]
     ) {
-        if (!this.geometry) { return }
-        const hidden = new Set(sidesToHide.map(side => this.SIDE_INDEX[side]));
-
-        this.geometry.groups = this.geometry.groups.filter(group => {
-            return !hidden.has(group.materialIndex ?? -1);
-        });
-
-        return this.geometry;
+        this.hiddenSides = sidesToHide;
     }
 }

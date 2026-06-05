@@ -3,9 +3,16 @@ import { Entity } from "./entity";
 
 export class Block extends Entity {
     createGeometry() {
-        const geo = new THREE.BoxGeometry(1, 1, 1);
-        this.geometry = geo;
-        return geo
+        this.geometry = new THREE.BoxGeometry(1, 1, 1);
+        const hidden = new Set(
+            this.hiddenSides.map(side => this.SIDE_INDEX[side])
+        );
+
+        this.geometry.groups = this.geometry.groups.filter(group => {
+            return !hidden.has(group.materialIndex ?? -1);
+        });
+
+        return this.geometry;
     }
 
     applyTransform(object: THREE.Object3D) {
@@ -37,13 +44,13 @@ export class Block extends Entity {
 
 
 
-    applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
+    applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
 
         const name = this.prepareName(this.name)
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
-                const texture = textureLoader.load(`/block/${path}.png`)
+                const texture = this.textureLoader.load(`/block/${path}.png`)
 
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.magFilter = THREE.NearestFilter;
@@ -60,7 +67,7 @@ export class Block extends Entity {
             });
         }
 
-        const texture = textureLoader.load(`/block/${name}.png`);
+        const texture = this.textureLoader.load(`/block/${name}.png`);
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;

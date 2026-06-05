@@ -308,8 +308,8 @@ export default function RegionClient({ slug }: { slug: string }) {
 
                             const properties = block.Properties?.value;
 
-                            if (name.includes('slab')) {
-                                console.log(block);
+                            if (!name.includes('slab') && !name.includes('stairs') && !name.includes('_trapdoor') && !name.includes('lantern')) {
+                                console.log(block.Name.value);
                             }
 
                             blocks.push({
@@ -323,7 +323,8 @@ export default function RegionClient({ slug }: { slug: string }) {
                                     : name.includes('_trapdoor') ? "trapdoor"
                                         : name.includes("lantern") ? 'lantern' :
                                             name.includes("slab") ? 'slab' :
-                                                'block',
+                                                name.includes("bush") || name.includes("mushroom") ? 'plants' :
+                                                    'block',
 
                                 state: properties
                                     ? {

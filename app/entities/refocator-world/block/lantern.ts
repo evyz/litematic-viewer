@@ -75,12 +75,12 @@ export class Lantern extends Entity {
         return "lantern_main_chain"
     }
 
-    applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
+    applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
         const name = this.prepareName()
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
-                const texture = textureLoader.load(`/block/${path}.png`)
+                const texture = this.textureLoader.load(`/block/${path}.png`)
 
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.magFilter = THREE.NearestFilter;
@@ -97,7 +97,7 @@ export class Lantern extends Entity {
             });
         }
 
-        const texture = textureLoader.load(`/block/${name}.png`);
+        const texture = this.textureLoader.load(`/block/${name}.png`);
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;

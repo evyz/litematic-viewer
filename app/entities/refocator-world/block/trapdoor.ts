@@ -76,13 +76,13 @@ export class TrapDoor extends Entity {
 
 
 
-    applyMaterial(textureLoader: THREE.TextureLoader): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
+    applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
 
         const name = this.prepareName(this.name)
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
-                const texture = textureLoader.load(`/block/${path}.png`)
+                const texture = this.textureLoader.load(`/block/${path}.png`)
 
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.magFilter = THREE.NearestFilter;
@@ -99,7 +99,7 @@ export class TrapDoor extends Entity {
             });
         }
 
-        const texture = textureLoader.load(`/block/${name}.png`);
+        const texture = this.textureLoader.load(`/block/${name}.png`);
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;

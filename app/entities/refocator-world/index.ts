@@ -5,6 +5,7 @@ import { BlockMeta } from '@/app/shared/types/block';
 import { Material } from './material';
 import { BoxSide } from './block/entity';
 import { Slab } from './block/slab';
+import { Plants } from './block/plants';
 
 type WorldContext = {
     scene: THREE.Scene;
@@ -29,11 +30,17 @@ export default class World {
     private light: THREE.DirectionalLight | null = null
     private ambientLight: THREE.AmbientLight | null = null
 
-    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab> = new Map()
+    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab | Plants> = new Map()
     private material = new Material();
     private textureLoader = new THREE.TextureLoader();
 
+    private raycaster = new THREE.Raycaster();
+    private mouse = new THREE.Vector2();
+    private blocksGroup = new THREE.Group()
+
     constructor() {
+
+        this.blocksGroup.name = "blocks";
     }
 
 
@@ -53,6 +60,7 @@ export default class World {
             this.scene.add(...this.blocks.values().map(block => block?.mesh ?? new THREE.Mesh()));
         }
         this.renderer.domElement.addEventListener("mousemove", this.onMouseMove);
+        this.renderer.domElement.addEventListener("click", this.onClick);
 
         this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
         this.renderer.domElement.addEventListener("mouseup", this.onMouseUp);
@@ -67,13 +75,48 @@ export default class World {
         this.scene?.remove(...objs)
 
         this.renderer?.domElement.removeEventListener("mousemove", this.onMouseMove);
+        this.renderer?.domElement.removeEventListener('click', this.onClick);
 
         this.renderer?.domElement.removeEventListener("mousedown", this.onMouseDown);
         this.renderer?.domElement.removeEventListener("mouseup", this.onMouseUp);
 
+        this.scene?.remove(this.blocksGroup);
+
         this.scene = undefined;
         this.camera = undefined;
         this.renderer = undefined;
+    }
+
+
+    private onClick = async (event: MouseEvent) => {
+        const hit = this.getIntersectionHit(event);
+
+        if (!hit || hit.instanceId == null) return;
+
+        const mesh = hit.object as THREE.InstancedMesh;
+        const block = mesh.userData.blocks?.[hit.instanceId];
+
+        if (!block) return;
+
+        console.log(block.getRenderKey(), block);
+    }
+
+    private getIntersectionHit(event: MouseEvent) {
+        if (!this.renderer || !this.camera) return;
+
+        const rect = this.renderer.domElement.getBoundingClientRect();
+
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+
+        const intersects = this.raycaster.intersectObjects(
+            this.blocksGroup.children,
+            true,
+        );
+
+        return intersects[0];
     }
 
     private onMouseDown = (event: MouseEvent) => {
@@ -104,37 +147,32 @@ export default class World {
         if (meta.type === 'slab') {
             return new Slab(meta, this.textureLoader);
         }
+        if (meta.type === 'plants') {
+            return new Plants(meta, this.textureLoader);
+        }
 
         return new Stairs(meta, this.textureLoader)
     }
 
+
+    private getKey = (x: number, y: number, z: number) => `${x}-${y}-${z}`;
+
     setBlocks(metaBlocks: Record<string, BlockMeta>) {
+        this.blocksGroup.clear();
+
+        const groups = new Map<string, Array<Block | Stairs | TrapDoor | Lantern | Slab | Plants>>();
 
         for (const key of Object.keys(metaBlocks)) {
             const meta = metaBlocks[key];
             const block = this.spawnBlock(meta)
-            const geometry = block.createGeometry()
-            const material = block.applyMaterial(this.textureLoader);
-
-            const mesh = new THREE.Mesh(
-                geometry,
-                material,
-            );
-
-            block.applyTransform(mesh);
-
-            mesh.updateMatrix();
-            block.setMesh(mesh);
 
             const [x, y, z] = key.split('-').map(Number)
-            const getKey = (x: number, y: number, z: number) => `${x}-${y}-${z}`
-            const top = metaBlocks[getKey(x, y + 1, z)]
-            const bottom = metaBlocks[getKey(x, y - 1, z)]
-            const left = metaBlocks[getKey(x - 1, y, z)]
-            const right = metaBlocks[getKey(x + 1, y, z)]
-            const front = metaBlocks[getKey(x, y, z + 1)]
-            const back = metaBlocks[getKey(x, y, z - 1)]
-
+            const top = metaBlocks[this.getKey(x, y + 1, z)]
+            const bottom = metaBlocks[this.getKey(x, y - 1, z)]
+            const left = metaBlocks[this.getKey(x - 1, y, z)]
+            const right = metaBlocks[this.getKey(x + 1, y, z)]
+            const front = metaBlocks[this.getKey(x, y, z + 1)]
+            const back = metaBlocks[this.getKey(x, y, z - 1)]
 
             const sides: BoxSide[] = []
             if (top && top.type === 'block') {
@@ -158,9 +196,63 @@ export default class World {
 
             block.hideBoxSides(sides);
 
+            const geometry = block.createGeometry()
+            const material = block.applyMaterial();
+
+            const mesh = new THREE.Mesh(
+                geometry,
+                material,
+            );
+
+            block.applyTransform(mesh);
+
+            mesh.updateMatrix();
+            block.setMesh(mesh);
+
+            const instanceKey = [
+                meta.type,
+                meta.name,
+                sides.sort().join(',')
+            ].join('|');
+
+            const group = groups.get(instanceKey) ?? [];
+            group.push(block);
+            groups.set(instanceKey, group);
+
             this.blocks.set(block.getRenderKey(), block);
-            this.scene?.add(mesh);
         }
+
+        for (const [_, blocks] of groups) {
+            const firstBlock = blocks[0];
+
+            const geometry = firstBlock.createGeometry();
+            const material = firstBlock.applyMaterial();
+
+            const instancedMesh = new THREE.InstancedMesh(
+                geometry,
+                material,
+                blocks.length
+            );
+
+            instancedMesh.userData.blocks = blocks;
+
+            const dummy = new THREE.Object3D();
+
+            blocks.forEach((block, index) => {
+                block.applyTransform(dummy);
+                dummy.updateMatrix();
+
+                instancedMesh.setMatrixAt(index, dummy.matrix);
+
+                block.setMesh(instancedMesh);
+            });
+
+            instancedMesh.instanceMatrix.needsUpdate = true;
+
+            this.blocksGroup.add(instancedMesh);
+        }
+
+        this.scene?.add(this.blocksGroup);
     }
 
     private moveCamera() {
