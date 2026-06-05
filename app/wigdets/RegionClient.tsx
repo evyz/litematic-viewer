@@ -9,6 +9,7 @@ import RegionScene from "./RegionScene";
 import { generateUUID } from "three/src/math/MathUtils.js";
 import { BlockMeta } from "../shared/types/block";
 import RegionScene2 from "./RegionScene2";
+import { getBlockType } from "../shared/utils/getBlockType";
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -308,10 +309,6 @@ export default function RegionClient({ slug }: { slug: string }) {
 
                             const properties = block.Properties?.value;
 
-                            if (!name.includes('slab') && !name.includes('stairs') && !name.includes('_trapdoor') && !name.includes('lantern')) {
-                                console.log(block.Name.value);
-                            }
-
                             blocks.push({
                                 x,
                                 y,
@@ -319,12 +316,7 @@ export default function RegionClient({ slug }: { slug: string }) {
                                 name,
                                 id: generateUUID(),
 
-                                type: name.includes('_stairs') ? "stairs"
-                                    : name.includes('_trapdoor') ? "trapdoor"
-                                        : name.includes("lantern") ? 'lantern' :
-                                            name.includes("slab") ? 'slab' :
-                                                name.includes("bush") || name.includes("mushroom") ? 'plants' :
-                                                    'block',
+                                type: getBlockType(name, properties),
 
                                 state: properties
                                     ? {

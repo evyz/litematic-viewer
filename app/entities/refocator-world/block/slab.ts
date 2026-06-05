@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Entity } from "./entity";
+import { EntityBlock as Entity } from "./entity";
 
 export class Slab extends Entity {
 
@@ -36,7 +36,9 @@ export class Slab extends Entity {
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
-                const texture = this.textureLoader.load(`/block/${path}.png`)
+                const texture = this.textureLoader.load(`/block/${path}.png`, () => { }, () => { }, (err) => {
+                    this.events.emit('onFailedLoadTexture', path, err)
+                })
 
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.magFilter = THREE.NearestFilter;
@@ -53,7 +55,10 @@ export class Slab extends Entity {
             });
         }
 
-        const texture = this.textureLoader.load(`/block/${name}.png`);
+
+        const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, (err) => {
+            this.events.emit('onFailedLoadTexture', name, err)
+        });
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;

@@ -2,10 +2,12 @@ import * as THREE from 'three'
 import { InputState } from '../world/input.state';
 import { Block, Stairs, TrapDoor, Lantern } from './block';
 import { BlockMeta } from '@/app/shared/types/block';
-import { Material } from './material';
 import { BoxSide } from './block/entity';
 import { Slab } from './block/slab';
 import { Plants } from './block/plants';
+import { Events, Subscribe } from './events';
+import { Wall } from './block/wall';
+import { Sign } from './block/sign';
 
 type WorldContext = {
     scene: THREE.Scene;
@@ -30,13 +32,14 @@ export default class World {
     private light: THREE.DirectionalLight | null = null
     private ambientLight: THREE.AmbientLight | null = null
 
-    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab | Plants> = new Map()
-    private material = new Material();
+    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign> = new Map()
     private textureLoader = new THREE.TextureLoader();
 
     private raycaster = new THREE.Raycaster();
     private mouse = new THREE.Vector2();
     private blocksGroup = new THREE.Group()
+    private events = new Events();
+
 
     constructor() {
 
@@ -134,24 +137,30 @@ export default class World {
 
     private spawnBlock(meta: BlockMeta) {
         if (meta.type === 'block') {
-            return new Block(meta, this.textureLoader);
+            return new Block(meta, this.textureLoader, this.events);
         }
 
         if (meta.type === "trapdoor") {
-            return new TrapDoor(meta, this.textureLoader);
+            return new TrapDoor(meta, this.textureLoader, this.events);
         }
 
         if (meta.type === "lantern") {
-            return new Lantern(meta, this.textureLoader);
+            return new Lantern(meta, this.textureLoader, this.events);
         }
         if (meta.type === 'slab') {
-            return new Slab(meta, this.textureLoader);
+            return new Slab(meta, this.textureLoader, this.events);
         }
         if (meta.type === 'plants') {
-            return new Plants(meta, this.textureLoader);
+            return new Plants(meta, this.textureLoader, this.events);
+        }
+        if (meta.type === 'wall') {
+            return new Wall(meta, this.textureLoader, this.events)
+        }
+        if (meta.type === 'sign') {
+            return new Sign(meta, this.textureLoader, this.events)
         }
 
-        return new Stairs(meta, this.textureLoader)
+        return new Stairs(meta, this.textureLoader, this.events)
     }
 
 
@@ -160,7 +169,7 @@ export default class World {
     setBlocks(metaBlocks: Record<string, BlockMeta>) {
         this.blocksGroup.clear();
 
-        const groups = new Map<string, Array<Block | Stairs | TrapDoor | Lantern | Slab | Plants>>();
+        const groups = new Map<string, Array<Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign>>();
 
         for (const key of Object.keys(metaBlocks)) {
             const meta = metaBlocks[key];
@@ -194,7 +203,8 @@ export default class World {
                 sides.push('back')
             }
 
-            block.hideBoxSides(sides);
+            // fix hidding sideBoxes
+            // block.hideBoxSides(sides);
 
             const geometry = block.createGeometry()
             const material = block.applyMaterial();
@@ -218,6 +228,7 @@ export default class World {
             const group = groups.get(instanceKey) ?? [];
             group.push(block);
             groups.set(instanceKey, group);
+
 
             this.blocks.set(block.getRenderKey(), block);
         }
@@ -253,6 +264,7 @@ export default class World {
         }
 
         this.scene?.add(this.blocksGroup);
+        this.events.emit('onBlocksSetted')
     }
 
     private moveCamera() {
@@ -305,5 +317,9 @@ export default class World {
 
         this.camera.position.addScaledVector(movement, speed);
         this.camera.position.y += this.input.move.y * speed;
+    }
+
+    subscribe: Subscribe = (...args) => {
+        return this.events.subscribe(...args)
     }
 }

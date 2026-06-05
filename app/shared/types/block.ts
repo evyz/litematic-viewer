@@ -16,7 +16,7 @@ export type Block = {
     name: string;
     id: string;
 
-    type: 'block' | 'stairs' | 'trapdoor' | "lantern" | "slab" | 'plants',
+    type: 'block' | 'stairs' | 'trapdoor' | "lantern" | "slab" | 'plants' | "wall" | "sign",
 
     state?: {
         facing?: BlockDirection;

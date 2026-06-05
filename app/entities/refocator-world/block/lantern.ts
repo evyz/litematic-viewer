@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Entity } from "./entity";
+import { EntityBlock as Entity } from "./entity";
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export class Lantern extends Entity {

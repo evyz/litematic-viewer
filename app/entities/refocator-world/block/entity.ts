@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { BlockMeta } from "@/app/shared/types/block";
+import { Events } from '../events';
 
 export type BoxSide = "right" | "left" | "top" | "bottom" | "front" | "back";
 
-export abstract class Entity {
+export abstract class EntityBlock {
 
     mesh?: THREE.Mesh;
     geometry?: THREE.BufferGeometry;
     hiddenSides: BoxSide[] = [];
 
-    constructor(public data: BlockMeta, readonly textureLoader: THREE.TextureLoader) {
+    constructor(public data: BlockMeta, readonly textureLoader: THREE.TextureLoader, readonly events: Events) {
 
     }
 

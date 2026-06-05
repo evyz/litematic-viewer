@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Entity } from "./entity";
+import { EntityBlock as Entity } from "./entity";
 
 export class TrapDoor extends Entity {
     private readonly thickness = 0.1875;

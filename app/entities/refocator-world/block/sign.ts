@@ -1,20 +1,14 @@
 import * as THREE from 'three';
 import { EntityBlock as Entity } from "./entity";
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-export class Stairs extends Entity {
+export class Sign extends Entity {
     createGeometry() {
-        const bottom = new THREE.BoxGeometry(1, 0.5, 1);
-        bottom.translate(0, -0.25, 0);
-
-        const step = new THREE.BoxGeometry(1, 0.5, 0.5);
-        step.translate(0, 0.25, 0.25);
-
-        this.geometry = mergeGeometries([bottom, step]);
-        return this.geometry;
+        const geo = new THREE.BoxGeometry(1, 0.3, 0.2);
+        this.geometry = geo;
+        return geo
     }
 
-    private getStairsRotationY() {
+    private getRotationY() {
         switch (this.data.state?.facing) {
             case "south":
                 return 0;
@@ -34,38 +28,21 @@ export class Stairs extends Entity {
         object.rotation.set(0, 0, 0);
         object.scale.set(1, 1, 1);
 
-        object.rotation.y = this.getStairsRotationY();
-
-        if (this.data?.state?.half === "top") {
-            object.rotation.x = Math.PI;
-        }
+        object.rotation.y = this.getRotationY();
     }
 
     private prepareTexture(name: string) {
-
         name = name.replace('minecraft:', '')
-        name = name.replace('_wood', "_log");
-        name = name.replace('_stairs', "");
-
-        const wordWithoutS = new Set(['brick', 'stone_brick', 'mossy_stone_brick'])
-        const planks = new Set(['spruce', 'birch', 'oak'])
-
-        if (wordWithoutS.has(name)) {
-            return name + 's'
-        }
-
-        if (planks.has(name)) {
-            return name + '_planks'
-        }
-
         return name
     }
 
     applyMaterial(): THREE.MeshStandardMaterial {
         const name = this.prepareTexture(this.name);
+        console.log(name);
 
-        const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, () => {
-            console.log(name);
+        const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, (err) => {
+            this.events.emit('onFailedLoadTexture', name, err)
+            console.warn('asdasdoladloadsasd')
         });
 
         texture.colorSpace = THREE.SRGBColorSpace;

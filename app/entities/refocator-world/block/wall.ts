@@ -1,15 +1,19 @@
 import * as THREE from 'three';
 import { EntityBlock as Entity } from "./entity";
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-export class Plants extends Entity {
+export class Wall extends Entity {
 
-    private lanternHeight = 1
-    private lanternSideWidth = 1
+    private textures: Record<string, string> = {
+        'stone_brick_wall': 'stone_bricks',
+        'cobblestone_wall': 'cobblestone'
+    }
+
+    private height = 1
 
     createGeometry() {
-        this.geometry = this.createIntersectionMesh();
-        return this.geometry;
+        const geo = new THREE.BoxGeometry(0.5, this.height, 0.5);
+        this.geometry = geo;
+        return geo
     }
 
     applyTransform(object: THREE.Object3D) {
@@ -18,32 +22,13 @@ export class Plants extends Entity {
         object.scale.set(1, 1, 1);
     }
 
-    private createIntersectionMesh() {
-        const width = this.lanternSideWidth;
-        const height = this.lanternHeight;
-
-        const geo1 = new THREE.PlaneGeometry(width, height);
-        const geo2 = new THREE.PlaneGeometry(width, height);
-
-        geo1.rotateY(Math.PI / 4);
-        geo2.rotateY(-Math.PI / 4);
-
-        geo1.translate(0, height, 0);
-        geo2.translate(0, height, 0);
-
-        const geometry = mergeGeometries([geo1, geo2]);
-
-        return geometry
-    }
-
     private prepareName(): string | string[] {
         const name = this.name.replace('minecraft:', '')
-        return name
+        return this.textures[name];
     }
 
     applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
-        const name = this.prepareName();
-
+        const name = this.prepareName()
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
@@ -70,7 +55,6 @@ export class Plants extends Entity {
             this.events.emit('onFailedLoadTexture', name, err)
         });
 
-
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
@@ -80,7 +64,6 @@ export class Plants extends Entity {
             map: texture,
             transparent: true,
             alphaTest: 0.1,
-            side: THREE.DoubleSide,
         });
 
         return material

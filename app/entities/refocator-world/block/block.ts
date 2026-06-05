@@ -1,7 +1,13 @@
 import * as THREE from 'three';
-import { Entity } from "./entity";
+import { EntityBlock as Entity } from "./entity";
 
 export class Block extends Entity {
+
+    private grasses: Record<string, [string, string]> = {
+        'grass_block': ['grass_block_side', 'grass_block_top'],
+        'grass_block_snow': ['grass_block_snow', 'grass_block_top']
+    }
+
     createGeometry() {
         this.geometry = new THREE.BoxGeometry(1, 1, 1);
         const hidden = new Set(
@@ -39,6 +45,12 @@ export class Block extends Entity {
             return [...side, ...top, ...side]
         }
 
+        if (this.grasses[name]) {
+            const [side, top] = this.grasses[name]
+            return [side, side, top, top, side, side]
+        }
+
+
         return name
     }
 
@@ -50,7 +62,7 @@ export class Block extends Entity {
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
-                const texture = this.textureLoader.load(`/block/${path}.png`)
+                const texture = this.textureLoader.load(`/block/${path}.png`, () => { }, () => { }, (err) => this.events.emit('onFailedLoadTexture', this.name, err))
 
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.magFilter = THREE.NearestFilter;
@@ -67,7 +79,7 @@ export class Block extends Entity {
             });
         }
 
-        const texture = this.textureLoader.load(`/block/${name}.png`);
+        const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, (err) => this.events.emit('onFailedLoadTexture', this.name, err));
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.magFilter = THREE.NearestFilter;
