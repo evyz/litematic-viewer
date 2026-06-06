@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.1.9",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "class-variance-authority": "^0.7.1",
@@ -16,7 +17,7 @@
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "prismarine-nbt": "^2.8.0",
-    "radix-ui": "^1.4.3",
+    "radix-ui": "^1.5.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.7.0",

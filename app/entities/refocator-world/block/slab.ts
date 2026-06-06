@@ -11,6 +11,10 @@ export class Slab extends Entity {
         return geo
     }
 
+    getPathTexture() {
+        return this.prepareName()
+    }
+
     applyTransform(object: THREE.Object3D) {
         const diff = (this.height / 2)
         object.position.set(this.data.x, this.data.y - (this.data?.state?.type === 'top' ? -diff : diff), this.data.z);

@@ -38,11 +38,9 @@ export class Sign extends Entity {
 
     applyMaterial(): THREE.MeshStandardMaterial {
         const name = this.prepareTexture(this.name);
-        console.log(name);
 
         const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, (err) => {
             this.events.emit('onFailedLoadTexture', name, err)
-            console.warn('asdasdoladloadsasd')
         });
 
         texture.colorSpace = THREE.SRGBColorSpace;

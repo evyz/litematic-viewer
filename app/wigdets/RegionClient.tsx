@@ -258,7 +258,7 @@ async function renderBlocks(container: HTMLDivElement, blocks: BlockMeta[]) {
 
 export default function RegionClient({ slug }: { slug: string }) {
     const viewerRef = useRef<HTMLDivElement | null>(null);
-    const [blocks, setBlocks] = useState<BlockMeta[]>([])
+    const [blocks, setBlocks] = useState<Record<string, BlockMeta>>({})
     const [usedBlocks, setUsedBlocks] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -289,7 +289,7 @@ export default function RegionClient({ slug }: { slug: string }) {
 
             const indices = decodeBlockStates(blockStates, bitsPerBlock, totalBlocks);
 
-            const blocks: BlockMeta[] = [];
+            const blocks: Record<string, BlockMeta> = {};
 
             let index = 0;
 
@@ -308,8 +308,7 @@ export default function RegionClient({ slug }: { slug: string }) {
                         if (name !== "minecraft:air") {
 
                             const properties = block.Properties?.value;
-
-                            blocks.push({
+                            const meta: BlockMeta = {
                                 x,
                                 y,
                                 z,
@@ -331,7 +330,9 @@ export default function RegionClient({ slug }: { slug: string }) {
                                         type: properties?.type?.value
                                     }
                                     : undefined,
-                            });
+                            }
+
+                            blocks[`${x}-${y}-${z}`] = meta
                         }
 
                         index++;
@@ -343,7 +344,7 @@ export default function RegionClient({ slug }: { slug: string }) {
             setBlocks(blocks);
             if (disposed || !viewerRef.current) return;
 
-            cleanup = await renderBlocks(viewerRef.current, blocks);
+            // cleanup = await renderBlocks(viewerRef.current, blocks);
         };
 
         callback();

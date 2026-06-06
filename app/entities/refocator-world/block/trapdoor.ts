@@ -9,6 +9,10 @@ export class TrapDoor extends Entity {
         return this.geometry;
     }
 
+    getPathTexture() {
+        return this.prepareName()
+    }
+
     applyTransform(object: THREE.Object3D) {
         const { x, y, z, state } = this.data;
 
@@ -52,9 +56,9 @@ export class TrapDoor extends Entity {
         }
     }
 
-    private prepareName(name: string): string | string[] {
+    private prepareName(): string | string[] {
 
-        name = name.replace('minecraft:', '')
+        let name = this.name.replace('minecraft:', '')
         name = name.replace('_wood', "_log");
         name = name.replace('_stairs', "");
 
@@ -78,7 +82,7 @@ export class TrapDoor extends Entity {
 
     applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
 
-        const name = this.prepareName(this.name)
+        const name = this.prepareName()
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {

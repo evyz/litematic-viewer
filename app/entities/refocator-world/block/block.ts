@@ -27,8 +27,8 @@ export class Block extends Entity {
         object.scale.set(1, 1, 1);
     }
 
-    private prepareName(name: string): string | string[] {
-        name = name.replace('minecraft:', '')
+    private prepareName(): string | string[] {
+        let name = this.name.replace('minecraft:', '')
         name = name.replace('_wood', "_log");
         name = name.replace('_stairs', "");
 
@@ -54,11 +54,12 @@ export class Block extends Entity {
         return name
     }
 
-
+    getPathTexture() {
+        return this.prepareName()
+    }
 
     applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
-
-        const name = this.prepareName(this.name)
+        const name = this.prepareName()
 
         if (Array.isArray(name)) {
             const loadTexture = (path: string) => {
@@ -79,6 +80,7 @@ export class Block extends Entity {
             });
         }
 
+
         const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, (err) => this.events.emit('onFailedLoadTexture', this.name, err));
 
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -91,6 +93,7 @@ export class Block extends Entity {
             transparent: true,
             alphaTest: 0.1,
         });
+
 
         return material
     }

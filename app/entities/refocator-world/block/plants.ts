@@ -41,6 +41,10 @@ export class Plants extends Entity {
         return name
     }
 
+    getPathTexture() {
+        return this.prepareName()
+    }
+
     applyMaterial(): THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[] {
         const name = this.prepareName();
 

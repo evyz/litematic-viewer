@@ -29,6 +29,10 @@ export class Stairs extends Entity {
         }
     }
 
+    getPathTexture() {
+        return this.prepareTexture()
+    }
+
     applyTransform(object: THREE.Object3D) {
         object.position.set(this.data.x, this.data.y, this.data.z);
         object.rotation.set(0, 0, 0);
@@ -41,9 +45,9 @@ export class Stairs extends Entity {
         }
     }
 
-    private prepareTexture(name: string) {
+    private prepareTexture() {
 
-        name = name.replace('minecraft:', '')
+        let name = this.name.replace('minecraft:', '')
         name = name.replace('_wood', "_log");
         name = name.replace('_stairs', "");
 
@@ -62,7 +66,7 @@ export class Stairs extends Entity {
     }
 
     applyMaterial(): THREE.MeshStandardMaterial {
-        const name = this.prepareTexture(this.name);
+        const name = this.prepareTexture();
 
         const texture = this.textureLoader.load(`/block/${name}.png`, () => { }, () => { }, () => {
             console.log(name);

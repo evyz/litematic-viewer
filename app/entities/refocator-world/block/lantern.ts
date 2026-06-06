@@ -25,6 +25,10 @@ export class Lantern extends Entity {
         }
     }
 
+    getPathTexture() {
+        return this.prepareName()
+    }
+
     private createChainMesh() {
 
         const name = this.prepareChainName();

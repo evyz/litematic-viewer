@@ -51,6 +51,8 @@ export abstract class EntityBlock {
         return this.name;
     }
 
+    abstract getPathTexture(): string | string[]
+
     applyTransform(object: THREE.Object3D) {
         object.position.set(this.data.x, this.data.y, this.data.z);
     }

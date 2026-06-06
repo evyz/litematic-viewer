@@ -15,6 +15,8 @@ type WorldContext = {
     renderer: THREE.WebGLRenderer;
 };
 
+type Classes = Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign;
+THREE.Cache.enabled = true;
 
 export default class World {
 
@@ -32,14 +34,13 @@ export default class World {
     private light: THREE.DirectionalLight | null = null
     private ambientLight: THREE.AmbientLight | null = null
 
-    blocks: Map<string, Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign> = new Map()
+    blocks: Map<string, Classes> = new Map()
     private textureLoader = new THREE.TextureLoader();
 
     private raycaster = new THREE.Raycaster();
     private mouse = new THREE.Vector2();
     private blocksGroup = new THREE.Group()
     private events = new Events();
-
 
     constructor() {
 
@@ -63,7 +64,7 @@ export default class World {
             this.scene.add(...this.blocks.values().map(block => block?.mesh ?? new THREE.Mesh()));
         }
         this.renderer.domElement.addEventListener("mousemove", this.onMouseMove);
-        this.renderer.domElement.addEventListener("click", this.onClick);
+        window.addEventListener("click", this.onClick);
 
         this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
         this.renderer.domElement.addEventListener("mouseup", this.onMouseUp);
@@ -78,7 +79,7 @@ export default class World {
         this.scene?.remove(...objs)
 
         this.renderer?.domElement.removeEventListener("mousemove", this.onMouseMove);
-        this.renderer?.domElement.removeEventListener('click', this.onClick);
+        window.removeEventListener('click', this.onClick);
 
         this.renderer?.domElement.removeEventListener("mousedown", this.onMouseDown);
         this.renderer?.domElement.removeEventListener("mouseup", this.onMouseUp);
@@ -100,8 +101,13 @@ export default class World {
         const block = mesh.userData.blocks?.[hit.instanceId];
 
         if (!block) return;
+        console.log('block', block, block.getRenderKey());
+        this.events.emit('onClickBlock', block.getRenderKey())
+    }
 
-        console.log(block.getRenderKey(), block);
+    getTexturePath = (key: string) => {
+        const block = this.blocks.get(key)
+        return block?.getPathTexture()
     }
 
     private getIntersectionHit(event: MouseEvent) {
@@ -136,42 +142,47 @@ export default class World {
     };
 
     private spawnBlock(meta: BlockMeta) {
-        if (meta.type === 'block') {
-            return new Block(meta, this.textureLoader, this.events);
+        switch (meta.type) {
+            case 'block': {
+                return new Block(meta, this.textureLoader, this.events);
+            }
+            case "trapdoor": {
+                return new TrapDoor(meta, this.textureLoader, this.events);
+            }
+            case "lantern": {
+                return new Lantern(meta, this.textureLoader, this.events);
+            }
+            case 'slab': {
+                return new Slab(meta, this.textureLoader, this.events);
+            }
+            case 'plants': {
+                return new Plants(meta, this.textureLoader, this.events);
+            }
+            case 'wall': {
+                return new Wall(meta, this.textureLoader, this.events)
+            }
+            case 'sign': {
+                return new Sign(meta, this.textureLoader, this.events)
+            }
+            default: {
+                return new Stairs(meta, this.textureLoader, this.events)
+            }
         }
-
-        if (meta.type === "trapdoor") {
-            return new TrapDoor(meta, this.textureLoader, this.events);
-        }
-
-        if (meta.type === "lantern") {
-            return new Lantern(meta, this.textureLoader, this.events);
-        }
-        if (meta.type === 'slab') {
-            return new Slab(meta, this.textureLoader, this.events);
-        }
-        if (meta.type === 'plants') {
-            return new Plants(meta, this.textureLoader, this.events);
-        }
-        if (meta.type === 'wall') {
-            return new Wall(meta, this.textureLoader, this.events)
-        }
-        if (meta.type === 'sign') {
-            return new Sign(meta, this.textureLoader, this.events)
-        }
-
-        return new Stairs(meta, this.textureLoader, this.events)
     }
 
 
     private getKey = (x: number, y: number, z: number) => `${x}-${y}-${z}`;
 
     setBlocks(metaBlocks: Record<string, BlockMeta>) {
+        this.events.emit('onStartLoadBlocks');
         this.blocksGroup.clear();
 
         const groups = new Map<string, Array<Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign>>();
 
-        for (const key of Object.keys(metaBlocks)) {
+        const keys = Object.keys(metaBlocks)
+        let count = 0
+
+        for (const key of keys) {
             const meta = metaBlocks[key];
             const block = this.spawnBlock(meta)
 
@@ -231,6 +242,8 @@ export default class World {
 
 
             this.blocks.set(block.getRenderKey(), block);
+            this.events.emit('progressSettingBlocks', count, keys.length)
+            count++
         }
 
         for (const [_, blocks] of groups) {
@@ -264,7 +277,7 @@ export default class World {
         }
 
         this.scene?.add(this.blocksGroup);
-        this.events.emit('onBlocksSetted')
+        this.events.emit('onBlocksSetted');
     }
 
     private moveCamera() {

@@ -16,6 +16,10 @@ export class Wall extends Entity {
         return geo
     }
 
+    getPathTexture() {
+        return this.prepareName()
+    }
+
     applyTransform(object: THREE.Object3D) {
         object.position.set(this.data.x, this.data.y, this.data.z);
         object.rotation.set(0, 0, 0);
