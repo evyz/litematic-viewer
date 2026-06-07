@@ -91,6 +91,12 @@ export default class World {
         this.renderer = undefined;
     }
 
+    setSpeed(speed: number) {
+        if (speed < 1 || speed > 99) { throw new Error('Validation failed: speed limit 1 - 99') }
+        this.speed = speed;
+        this.events.emit('onChangeSpeed', speed)
+    }
+
 
     private onClick = async (event: MouseEvent) => {
         const hit = this.getIntersectionHit(event);
@@ -332,7 +338,5 @@ export default class World {
         this.camera.position.y += this.input.move.y * speed;
     }
 
-    subscribe: Subscribe = (...args) => {
-        return this.events.subscribe(...args)
-    }
+    subscribe: Subscribe = this.events.subscribe;
 }

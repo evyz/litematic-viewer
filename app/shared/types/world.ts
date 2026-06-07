@@ -4,4 +4,5 @@ export type WorldEventMap = {
     progressSettingBlocks: (current: number, total: number) => void;
     onStartLoadBlocks: () => void;
     onClickBlock: (key: string) => void;
+    onChangeSpeed: (speed: number) => void
 };

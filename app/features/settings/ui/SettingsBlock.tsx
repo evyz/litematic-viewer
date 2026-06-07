@@ -1,7 +1,7 @@
 import SettingsButton from "./Button"
 import SettingsModal from "./Block"
-import World from "@/app/entities/world"
 import { ModalStateProps } from "@/app/shared/types/modal"
+import World from "@/app/entities/refocator-world";
 
 type Props = ModalStateProps & {
     world: World;
