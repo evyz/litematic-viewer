@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import SeetingsBlock from "../features/settings/ui/SettingsBlock";
 import { ModalType } from "../shared/types/modal";
+import BlockList from "../features/block-list";
 
 
 type Props = {
@@ -78,6 +79,10 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
         return unsub
     }, [world])
 
+    const modalProps = {
+        modalType,
+        setModalType
+    }
 
     return (
         <>
@@ -92,7 +97,8 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
             </div>
             <div className={`${"fixed bottom-4 z-100 h-14 w-full flex items-center justify-center"}`}>
                 <div className="w-2/3 h-full px-2 py-2 bg-white rounded-full flex flex-row gap-2">
-                    <SeetingsBlock modalType={modalType} setModalType={setModalType} world={world} />
+                    <SeetingsBlock {...modalProps} world={world} />
+                    <BlockList {...modalProps} world={world} />
                 </div></div>
             {path && <div title={path} className="size-10 flex items-center justify-center rounded-full fixed bottom-4 right-4 z-100 bg-white">
                 <Image width={16} height={16} src={`/block/${path}.png`} alt={`/block/${path}.png`} />

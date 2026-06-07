@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 
-export type ModalType = "used_blocks" | "settings" | null
+export type ModalType = "used_blocks" | "settings" | "block_list" | null
 
 export type ModalStateProps = {
     modalType: ModalType;

@@ -97,6 +97,10 @@ export default class World {
         this.events.emit('onChangeSpeed', speed)
     }
 
+    async getBlockList(): Promise<{ directories: string[], files: string[] }> {
+        const file = await fetch(`/block/_list.json`)
+        return await file.json()
+    }
 
     private onClick = async (event: MouseEvent) => {
         const hit = this.getIntersectionHit(event);
