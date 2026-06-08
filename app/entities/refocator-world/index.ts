@@ -8,6 +8,7 @@ import { Plants } from './block/plants';
 import { Events, Subscribe } from './events';
 import { Wall } from './block/wall';
 import { Sign } from './block/sign';
+import { generateUUID } from 'three/src/math/MathUtils.js';
 
 type WorldContext = {
     scene: THREE.Scene;
@@ -118,6 +119,42 @@ export default class World {
     getTexturePath = (key: string) => {
         const block = this.blocks.get(key)
         return block?.getPathTexture()
+    }
+
+    addBlock([x, y, z]: [number, number, number], name: string, type: BlockMeta['type']) {
+        const key = this.getKey(x, y, z);
+
+        if (this.blocks.has(key)) {
+            return;
+        }
+
+        const meta: BlockMeta = {
+            id: generateUUID(),
+            x,
+            y,
+            z,
+            name,
+            type,
+        };
+
+        const nextMetaBlocks: Record<string, BlockMeta> = {};
+
+        for (const [key, block] of this.blocks) {
+            const { x, y, z, name, type } = block.meta
+            nextMetaBlocks[key] = {
+                id: block.id,
+                x: x,
+                y: y,
+                z: z,
+                name: name,
+                type: type,
+            };
+        }
+
+        nextMetaBlocks[key] = meta;
+
+        this.blocks.clear();
+        this.setBlocks(nextMetaBlocks);
     }
 
     private getIntersectionHit(event: MouseEvent) {
@@ -239,6 +276,7 @@ export default class World {
 
             mesh.updateMatrix();
             block.setMesh(mesh);
+            block.setMeta
 
             const instanceKey = [
                 meta.type,

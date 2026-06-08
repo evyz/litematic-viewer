@@ -1,9 +1,9 @@
-import { useMode } from "@/app/entities/react-world/useMode";
-import World from "@/app/entities/world"
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Block from "./block";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import World from "@/app/entities/refocator-world";
+import { Button } from "@/components/ui/button";
 
 type Props = {
     world: World;
@@ -11,25 +11,36 @@ type Props = {
 
 export default function AddBlock({ world }: Props) {
 
-    const [block, setBlock] = useState(world.getSelectedBlockName())
-    const [mode, toggleMode] = useMode(world);
+    const [blocks, setBlocks] = useState<string[]>([])
+    const [block, setBlock] = useState<string | null>(null)
+    const [mode, toggleMode] = useState<'add_block' | null>('add_block');
     const [open, setOpen] = useState(false)
-    const blocks = world.getBlockList();
 
-    const getPath = (block: string) => {
-        const path = world.getPath(block)
+    const getPath = (path: string | string[]) => {
         return '/block/' + (path ? Array.isArray(path) ? path[0] : path : '')
     }
 
     useEffect(() => {
-        const unsub = world.subscribe('change_selected_block', (upd) => {
-            setBlock(upd)
-            setOpen(false)
-            console.log(upd);
+        const unsub = world.subscribe('onClickBlock', (coords) => {
+            console.log(coords);
         })
 
         return unsub
-    }, [world])
+    }, [world]);
+
+    useEffect(() => {
+        const callback = async () => {
+            try {
+                const res = await world.getBlockList();
+                setBlocks(res.files);
+                setBlock(res.files[0]);
+            } catch (e) {
+                console.error('failed to get block list:', e)
+            }
+        }
+
+        callback();
+    }, [])
 
     return (
         <>
@@ -40,18 +51,16 @@ export default function AddBlock({ world }: Props) {
                     </DialogHeader>
                     <div className="w-full gap-4 flex flex-row items-center flex-wrap h-150 overflow-y-scroll">
                         {blocks.map(block =>
-                            <Block onClick={() => {
-                                world.setSelectedBlockName(block)
-                            }} getPath={getPath} key={block} name={block} />
+                            <Block onClick={() => setBlock(block)} getPath={getPath} key={block} name={block} />
                         )}
                     </div>
                 </DialogContent>
             </Dialog>
-            <button onClick={() => toggleMode('add_block')} className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
-                {mode === 'add_block' ? <ActiveIcon /> : <Icon />}
-            </button>
+            <Button variant={"outline"} className={"size-10 rounded-full"} onClick={() => toggleMode(prev => prev === 'add_block' ? null : 'add_block')}>
+                {mode === "add_block" ? <ActiveIcon /> : <Icon />}
+            </Button>
             <button onClick={() => setOpen(prev => !prev)} className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
-                <img src={getPath(block)} />
+                <img src={block ? getPath(block) : ''} />
             </button>
         </>
     )

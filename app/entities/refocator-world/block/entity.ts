@@ -33,6 +33,10 @@ export abstract class EntityBlock {
         return this.data.name;
     }
 
+    get meta() {
+        return this.data
+    }
+
     setMesh(mesh: THREE.Mesh) {
         this.mesh = mesh;
     }
