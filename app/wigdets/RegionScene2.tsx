@@ -41,11 +41,9 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
     }, [world])
 
     useEffect(() => {
-        const unsub = world.subscribe('onClickBlock', (key) => {
+        const unsub = world.subscribe('onClickBlock', (key, side) => {
             try {
-                console.log(key);
                 const path = world.getTexturePath(key)
-                console.log(path, key);
                 setPath(Array.isArray(path) ? path[0] : path ?? null)
             } catch (e) {
                 console.error('e', e);

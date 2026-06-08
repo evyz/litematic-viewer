@@ -4,10 +4,28 @@ import Block from "./block";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import World from "@/app/entities/refocator-world";
 import { Button } from "@/components/ui/button";
+import { BoxSide } from "@/app/entities/refocator-world/block/entity";
 
 type Props = {
     world: World;
 }
+
+const getOffsetBySide = (side: BoxSide): [number, number, number] => {
+    switch (side) {
+        case 'top':
+            return [0, 1, 0];
+        case 'bottom':
+            return [0, -1, 0];
+        case 'left':
+            return [-1, 0, 0];
+        case 'right':
+            return [1, 0, 0];
+        case 'front':
+            return [0, 0, 1];
+        case 'back':
+            return [0, 0, -1];
+    }
+};
 
 export default function AddBlock({ world }: Props) {
 
@@ -21,8 +39,17 @@ export default function AddBlock({ world }: Props) {
     }
 
     useEffect(() => {
-        const unsub = world.subscribe('onClickBlock', (coords) => {
-            console.log(coords);
+        const unsub = world.subscribe('onClickBlock', (key, side) => {
+            if (mode !== 'add_block' || !block) return;
+
+            const [x, y, z] = key.split('-').map(Number);
+            const [dx, dy, dz] = getOffsetBySide(side);
+
+            world.addBlock(
+                [x + dx, y + dy, z + dz],
+                block,
+                'block',
+            );
         })
 
         return unsub

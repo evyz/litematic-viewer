@@ -103,18 +103,41 @@ export default class World {
         return await file.json()
     }
 
+    private normalToSide(normal: THREE.Vector3): BoxSide {
+        const absX = Math.abs(normal.x);
+        const absY = Math.abs(normal.y);
+        const absZ = Math.abs(normal.z);
+
+        if (absY >= absX && absY >= absZ) {
+            return normal.y > 0 ? 'top' : 'bottom';
+        }
+
+        if (absX >= absY && absX >= absZ) {
+            return normal.x > 0 ? 'right' : 'left';
+        }
+
+        return normal.z > 0 ? 'front' : 'back';
+    }
+
     private onClick = async (event: MouseEvent) => {
         const hit = this.getIntersectionHit(event);
 
-        if (!hit || hit.instanceId == null) return;
+        if (!hit || hit.instanceId == null || !hit.face) return;
 
         const mesh = hit.object as THREE.InstancedMesh;
         const block = mesh.userData.blocks?.[hit.instanceId];
 
         if (!block) return;
-        console.log('block', block, block.getRenderKey());
-        this.events.emit('onClickBlock', block.getRenderKey())
-    }
+
+        const normal = hit.face.normal.clone();
+
+        const normalMatrix = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+        normal.applyNormalMatrix(normalMatrix).normalize();
+
+        const side = this.normalToSide(normal);
+
+        this.events.emit('onClickBlock', block.getRenderKey(), side);
+    };
 
     getTexturePath = (key: string) => {
         const block = this.blocks.get(key)
@@ -155,6 +178,7 @@ export default class World {
 
         this.blocks.clear();
         this.setBlocks(nextMetaBlocks);
+        console.log(meta)
     }
 
     private getIntersectionHit(event: MouseEvent) {
@@ -276,7 +300,6 @@ export default class World {
 
             mesh.updateMatrix();
             block.setMesh(mesh);
-            block.setMeta
 
             const instanceKey = [
                 meta.type,
