@@ -8,6 +8,7 @@ import { BoxSide } from "@/app/entities/refocator-world/block/entity";
 
 type Props = {
     world: World;
+    block: string | null
 }
 
 const getOffsetBySide = (side: BoxSide): [number, number, number] => {
@@ -15,24 +16,31 @@ const getOffsetBySide = (side: BoxSide): [number, number, number] => {
         case 'top':
             return [0, 1, 0];
         case 'bottom':
-            return [0, -1, 0];
+            return [0, 1, 0];
         case 'left':
             return [-1, 0, 0];
         case 'right':
             return [1, 0, 0];
         case 'front':
-            return [0, 0, 1];
+            return [0, -0, 1];
         case 'back':
             return [0, 0, -1];
     }
 };
 
-export default function AddBlock({ world }: Props) {
+const parseKey = (key: string): [number, number, number] => {
+    const match = key.match(/^(-?\d+)-(-?\d+)-(-?\d+)$/);
 
-    const [blocks, setBlocks] = useState<string[]>([])
-    const [block, setBlock] = useState<string | null>(null)
-    const [mode, toggleMode] = useState<'add_block' | null>('add_block');
-    const [open, setOpen] = useState(false)
+    if (!match) {
+        throw new Error(`Invalid block key: ${key}`);
+    }
+
+    return [Number(match[1]), Number(match[2]), Number(match[3])];
+};
+
+export default function AddBlock({ world, block }: Props) {
+
+    const [mode, toggleMode] = useState<'add_block' | null>(null);
 
     const getPath = (path: string | string[]) => {
         return '/block/' + (path ? Array.isArray(path) ? path[0] : path : '')
@@ -40,54 +48,33 @@ export default function AddBlock({ world }: Props) {
 
     useEffect(() => {
         const unsub = world.subscribe('onClickBlock', (key, side) => {
-            if (mode !== 'add_block' || !block) return;
+            try {
+                console.log(key, side, mode, block);
+                if (mode !== 'add_block' || !block) return;
 
-            const [x, y, z] = key.split('-').map(Number);
-            const [dx, dy, dz] = getOffsetBySide(side);
+                const [x, y, z] = parseKey(key);
+                const [dx, dy, dz] = getOffsetBySide(side);
 
-            world.addBlock(
-                [x + dx, y + dy, z + dz],
-                block,
-                'block',
-            );
+                world.addBlock(
+                    [x + dx, y + dy, z + dz],
+                    block.replace('.png', ''),
+                    'block',
+                );
+            } catch (e) {
+                console.error(e);
+            }
         })
 
         return unsub
-    }, [world]);
-
-    useEffect(() => {
-        const callback = async () => {
-            try {
-                const res = await world.getBlockList();
-                setBlocks(res.files);
-                setBlock(res.files[0]);
-            } catch (e) {
-                console.error('failed to get block list:', e)
-            }
-        }
-
-        callback();
-    }, [])
+    }, [block, mode, world]);
 
     return (
         <>
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="bg-white ">
-                    <DialogHeader>
-                        <DialogTitle className="font-bold">Menu blocks:</DialogTitle>
-                    </DialogHeader>
-                    <div className="w-full gap-4 flex flex-row items-center flex-wrap h-150 overflow-y-scroll">
-                        {blocks.map(block =>
-                            <Block onClick={() => setBlock(block)} getPath={getPath} key={block} name={block} />
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
             <Button variant={"outline"} className={"size-10 rounded-full"} onClick={() => toggleMode(prev => prev === 'add_block' ? null : 'add_block')}>
                 {mode === "add_block" ? <ActiveIcon /> : <Icon />}
             </Button>
-            <button onClick={() => setOpen(prev => !prev)} className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
-                <img src={block ? getPath(block) : ''} />
+            <button className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
+                <img src={block ? getPath(block) : undefined} />
             </button>
         </>
     )
@@ -95,14 +82,32 @@ export default function AddBlock({ world }: Props) {
 
 function Icon() {
     return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 12H16" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M12 16V8" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+                d="M8 12H16"
+                stroke="#292D32"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M12 16V8"
+                stroke="#292D32"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z"
+                stroke="#292D32"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
-
     );
 }
+
 function ActiveIcon() {
     return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

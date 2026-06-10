@@ -23,10 +23,17 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
 
     const [showProgress, setShowProgress] = useState(false)
     const worldRef = useRef(initialWorld ?? new World());
+
+    useEffect(() => {
+        window.world = worldRef.current;
+    }, [])
+
     const world = worldRef.current
     const [progress, setProgress] = useState(0)
     const [path, setPath] = useState<string | null>(null)
     const [modalType, setModalType] = useState<ModalType>(null);
+    const [listBlocks, setBlocks] = useState<string[]>([])
+    const [block, setBlock] = useState<string | null>(null)
 
     useEffect(() => {
         const showed = new Set<string>([])
@@ -45,6 +52,7 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
             try {
                 const path = world.getTexturePath(key)
                 setPath(Array.isArray(path) ? path[0] : path ?? null)
+
             } catch (e) {
                 console.error('e', e);
             }
@@ -78,9 +86,17 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
         return unsub
     }, [world])
 
+    const activeBlockProps = {
+        block,
+        setBlock
+    }
+
     const modalProps = {
         modalType,
-        setModalType
+        setModalType,
+        blocks: listBlocks,
+        setBlocks,
+        ...activeBlockProps
     }
 
     return (
@@ -98,7 +114,7 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
                 <div className="w-2/3 h-full px-2 py-2 bg-white rounded-full flex flex-row gap-2">
                     <SeetingsBlock {...modalProps} world={world} />
                     <BlockList {...modalProps} world={world} />
-                    <AddBlock world={world} />
+                    <AddBlock {...activeBlockProps} world={world} />
                 </div></div>
             {path && <div title={path} className="size-10 flex items-center justify-center rounded-full fixed bottom-4 right-4 z-100 bg-white">
                 <Image width={16} height={16} src={`/block/${path}.png`} alt={`/block/${path}.png`} />

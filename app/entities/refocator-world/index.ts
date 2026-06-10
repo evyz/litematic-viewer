@@ -122,21 +122,35 @@ export default class World {
     private onClick = async (event: MouseEvent) => {
         const hit = this.getIntersectionHit(event);
 
-        if (!hit || hit.instanceId == null || !hit.face) return;
+        if (!hit || !hit.face) return;
 
-        const mesh = hit.object as THREE.InstancedMesh;
-        const block = mesh.userData.blocks?.[hit.instanceId];
+        let block: Classes | undefined;
+
+        if (hit.instanceId != null) {
+            const mesh = hit.object as THREE.InstancedMesh;
+            block = mesh.userData.blocks?.[hit.instanceId];
+        } else {
+            const mesh = hit.object as THREE.Mesh;
+            block = mesh.userData.block;
+        }
 
         if (!block) return;
 
         const normal = hit.face.normal.clone();
 
-        const normalMatrix = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+        const normalMatrix = new THREE.Matrix3().getNormalMatrix(
+            hit.object.matrixWorld,
+        );
+
         normal.applyNormalMatrix(normalMatrix).normalize();
 
         const side = this.normalToSide(normal);
 
-        this.events.emit('onClickBlock', block.getRenderKey(), side);
+        this.events.emit(
+            'onClickBlock',
+            block.getRenderKey(),
+            side,
+        );
     };
 
     getTexturePath = (key: string) => {
@@ -146,6 +160,8 @@ export default class World {
 
     addBlock([x, y, z]: [number, number, number], name: string, type: BlockMeta['type']) {
         const key = this.getKey(x, y, z);
+
+        console.log(key, this.blocks.has(key), this.blocks.get(key));
 
         if (this.blocks.has(key)) {
             return;
@@ -160,25 +176,28 @@ export default class World {
             type,
         };
 
-        const nextMetaBlocks: Record<string, BlockMeta> = {};
+        const block = this.spawnBlock(meta);
+        this.blocks.set(key, block);
 
-        for (const [key, block] of this.blocks) {
-            const { x, y, z, name, type } = block.meta
-            nextMetaBlocks[key] = {
-                id: block.id,
-                x: x,
-                y: y,
-                z: z,
-                name: name,
-                type: type,
-            };
+        const geometry = block.createGeometry();
+        const material = block.applyMaterial();
+
+        const mesh = new THREE.Mesh(geometry, material);
+
+        block.applyTransform(mesh);
+        mesh.updateMatrix();
+        mesh.updateMatrixWorld(true);
+
+        block.setMesh(mesh);
+
+        mesh.userData.block = block;
+
+        this.blocksGroup.add(mesh);
+        if (this.scene && !this.scene.children.includes(this.blocksGroup)) {
+            this.scene.add(this.blocksGroup);
         }
 
-        nextMetaBlocks[key] = meta;
-
-        this.blocks.clear();
-        this.setBlocks(nextMetaBlocks);
-        console.log(meta)
+        this.blocksGroup.updateMatrixWorld(true);
     }
 
     private getIntersectionHit(event: MouseEvent) {
