@@ -1,16 +1,27 @@
-import { useMode } from "@/app/entities/react-world/useMode";
-import World from "@/app/entities/world";
+import World from "@/app/entities/refocator-world";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 type Props = {
     world: World;
 }
 
 export default function RemoveBlockContainer({ world }: Props) {
-    const [mode, toggleMode] = useMode(world);
+
+    const [mode, toggleMode] = useState<'remove_block' | null>(null);
+
+    useEffect(() => {
+
+        const unsub = world.subscribe('onClickBlock', (key) => {
+            if (mode !== 'remove_block' || !key) return
+            world.removeBlock(world.parseKey(key))
+        })
+
+        return unsub
+    }, [mode, world])
 
     return (
-        <button onClick={() => toggleMode('remove_block')} className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
+        <button onClick={() => toggleMode(prev => prev === 'remove_block' ? null : 'remove_block')} className={cn("h-full size-10 rounded-[50%] flex items-center justify-center bg-slate-500 select-none")} >
             {mode === 'remove_block' ? <ActiveIcon /> : <Icon />}
         </button>
     )

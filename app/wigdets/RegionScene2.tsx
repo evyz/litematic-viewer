@@ -12,6 +12,7 @@ import SeetingsBlock from "../features/settings/ui/SettingsBlock";
 import { ModalType } from "../shared/types/modal";
 import BlockList from "../features/block-list";
 import AddBlock from "../features/add-block";
+import RemoveBlockContainer from "../features/remove-block";
 
 
 type Props = {
@@ -115,6 +116,7 @@ export default function RegionScene2({ world: initialWorld, blocks }: Props) {
                     <SeetingsBlock {...modalProps} world={world} />
                     <BlockList {...modalProps} world={world} />
                     <AddBlock {...activeBlockProps} world={world} />
+                    <RemoveBlockContainer world={world} />
                 </div></div>
             {path && <div title={path} className="size-10 flex items-center justify-center rounded-full fixed bottom-4 right-4 z-100 bg-white">
                 <Image width={16} height={16} src={`/block/${path}.png`} alt={`/block/${path}.png`} />

@@ -119,8 +119,9 @@ export default class World {
         return normal.z > 0 ? 'front' : 'back';
     }
 
-    private onClick = async (event: MouseEvent) => {
-        const hit = this.getIntersectionHit(event);
+    private onClick = async () => {
+        console.log('onCLick trigger');
+        const hit = this.getIntersectionHit();
 
         if (!hit || !hit.face) return;
 
@@ -161,8 +162,6 @@ export default class World {
     addBlock([x, y, z]: [number, number, number], name: string, type: BlockMeta['type']) {
         const key = this.getKey(x, y, z);
 
-        console.log(key, this.blocks.has(key), this.blocks.get(key));
-
         if (this.blocks.has(key)) {
             return;
         }
@@ -200,15 +199,33 @@ export default class World {
         this.blocksGroup.updateMatrixWorld(true);
     }
 
-    private getIntersectionHit(event: MouseEvent) {
-        if (!this.renderer || !this.camera) return;
+    removeBlock([x, y, z]: [number, number, number]) {
+        const key = this.getKey(x, y, z);
+        const block = this.blocks.get(key)
+        console.log(block);
+        this.blocks.delete(key);
 
-        const rect = this.renderer.domElement.getBoundingClientRect();
+        const data: Record<string, BlockMeta> = {};
 
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        this.blocks.forEach((block) => {
+            data[block.getRenderKey()] = block.meta;
+        });
 
-        this.raycaster.setFromCamera(this.mouse, this.camera);
+        this.setBlocks(data);
+    }
+
+    parseKey(key: string): [number, number, number] {
+        const [x, y, z] = key.split('=')
+        return [Number(x), Number(y), Number(z)]
+    }
+
+    private getIntersectionHit() {
+        if (!this.camera) return;
+
+        this.raycaster.setFromCamera(
+            new THREE.Vector2(0, 0),
+            this.camera,
+        );
 
         const intersects = this.raycaster.intersectObjects(
             this.blocksGroup.children,
@@ -261,10 +278,12 @@ export default class World {
     }
 
 
-    private getKey = (x: number, y: number, z: number) => `${x}-${y}-${z}`;
+    getKey = (x: number, y: number, z: number) => `${x}=${y}=${z}`;
 
     setBlocks(metaBlocks: Record<string, BlockMeta>) {
         this.events.emit('onStartLoadBlocks');
+
+        this.blocks.clear();
         this.blocksGroup.clear();
 
         const groups = new Map<string, Array<Block | Stairs | TrapDoor | Lantern | Slab | Plants | Wall | Sign>>();
@@ -276,7 +295,7 @@ export default class World {
             const meta = metaBlocks[key];
             const block = this.spawnBlock(meta)
 
-            const [x, y, z] = key.split('-').map(Number)
+            const [x, y, z] = key.split('=').map(Number)
             const top = metaBlocks[this.getKey(x, y + 1, z)]
             const bottom = metaBlocks[this.getKey(x, y - 1, z)]
             const left = metaBlocks[this.getKey(x - 1, y, z)]

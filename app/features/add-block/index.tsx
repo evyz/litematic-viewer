@@ -1,7 +1,5 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import Block from "./block";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import World from "@/app/entities/refocator-world";
 import { Button } from "@/components/ui/button";
 import { BoxSide } from "@/app/entities/refocator-world/block/entity";
@@ -29,7 +27,7 @@ const getOffsetBySide = (side: BoxSide): [number, number, number] => {
 };
 
 const parseKey = (key: string): [number, number, number] => {
-    const match = key.match(/^(-?\d+)-(-?\d+)-(-?\d+)$/);
+    const match = key.match(/^(-?\d+)=(-?\d+)=(-?\d+)$/);
 
     if (!match) {
         throw new Error(`Invalid block key: ${key}`);
